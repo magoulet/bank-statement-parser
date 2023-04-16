@@ -34,6 +34,15 @@ class ci_direct_investing():
         self.dividends.tail(5)
         # print(f"Dividend summary: \n{self.monthly_dividends}")
         return self.monthly_dividends
+
+    def orders(self):
+        df = self.transactions
+        condition = (df['Activity'] == 'Buy') | (df['Activity'] == 'Sell')
+        cols = ['Effective Date', 'Activity', 'Symbol','Quantity','Price', 'Total Value']
+        self.orders = df.loc[condition, cols]
+
+        return self.orders
+
 class ibkr():
     def __init__(self):
         pass
@@ -78,6 +87,8 @@ def main():
     df = ci_direct.monthly_dividends()
 
     print(df)
+
+    print(ci_direct.orders())
 
 if __name__ == '__main__':
     main()
