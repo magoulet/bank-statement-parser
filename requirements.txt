@@ -1,3 +1,4 @@
 datetime
+matplotlib
 numpy
 pandas
