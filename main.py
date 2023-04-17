@@ -1,94 +1,35 @@
 import io
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 
-class ci_direct_investing():
-    def __init__(self):
-        pass
+from classes import *
 
-    def print(self):
-        print(f"Transactions: {self.transactions}")
-
-    def parse(self, path):
-        df = pd.read_csv(path,
-                         # index_col=['Effective Date'],
-                         parse_dates=['Effective Date']
-                         )
-        df = df.rename(columns={'Effective Date': 'Date', 'Total Value': 'Amount'})
-        self.transactions = df
-
-    def dividends(self):
-        df = self.transactions
-        condition = df['Activity'] == 'Dividend'
-        cols = ['Date', 'Description', 'Amount']
-        self.dividends = df.loc[condition, cols]
-
-        return self.dividends
-
-    def monthly_dividends(self):
-        self.dividends()
-        df = self.dividends
-        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='M')).agg({'Amount': 'sum'})
-        # print(f"Dividend summary: \n{self.monthly_dividends}")
-        return self.monthly_dividends
-
-    def orders(self):
-        df = self.transactions
-        condition = (df['Activity'] == 'Buy') | (df['Activity'] == 'Sell')
-        cols = ['Date', 'Activity', 'Symbol','Quantity','Price', 'Amount']
-        self.orders = df.loc[condition, cols]
-
-        return self.orders
-
-class interactive_brokers():
-    def __init__(self):
-        pass
-
-    def print(self):
-        print(f"Transactions: {self.transactions}")
-
-    def parse(self, path):
-        buf = io.StringIO()
-
-        with open(path, "r") as f:
-            lines = f.readlines()
-        with buf as f:
-            headerFlag = False
-            for line in lines:
-                if (line.startswith("Dividends,Header")) and not headerFlag :
-                    f.write(line)
-                    headerFlag = True
-                if line.startswith("Dividends,Data,USD"):
-                    f.write(line)
-
-            buf.seek(0)
-            df = pd.read_csv(buf,
-                             # index_col=['Effective Date'],
-                             parse_dates=['Date']
-                             )
-        self.transactions = df
-
-    def dividends(self):
-        df = self.transactions
-        self.dividends = df
-
-        return self.dividends
-
-    def monthly_dividends(self):
-        self.dividends()
-        df = self.dividends
-        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='M')).agg({'Amount': 'sum'})
-
-        return self.monthly_dividends
+def plot_dividends(df):
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots(figsize=(10,5))
+    ax.plot(df['Amount'], marker='o')
+    # ax.stackplot(results['periodEnd'], results['PPT']/8, results['Sick']/8, results['Vac']/8)
+    # ax.stackplot(results['periodEnd'], results['sickLost'], results['vacLost'], colors=['red', 'blue'])
+    ax.set(title='Dividend Amount',
+           ylabel='Amount',
+           xlabel='Period End Date')
+    # ax.legend(['PTO', 'PPT', 'Sick', 'Vac', 'Lost (PPT)','Lost (Vac)'], loc='best')
+    plt.show()
 
 
 def main():
     CI_BASEDIR = '/home/magoulet/gdrive/finances/bank_statements/ci_direct_investing/'
-    CI_FILENAME = 'CI Direct Investing Activity - All time as of Apr 15 2023 - RRSP 103033791.csv'
-    ci_path = os.path.join(CI_BASEDIR, CI_FILENAME)
     IBKR_BASEDIR = '/home/magoulet/gdrive/finances/bank_statements/ibkr/'
+    CLOSED_ACCOUNTS_BASEDIR = '/home/magoulet/gdrive/finances/bank_statements/'
+
+    CI_FILENAME = 'CI Direct Investing Activity - All time as of Apr 15 2023 - RRSP 103033791.csv'
     IBKR_FILENAME = 'dividends_since_opening_accounts_2023-04-16.csv'
+    CLOSED_ACCOUNTS_FILENAME = 'Dividend Gains - pre_2022-04-30.csv'
+
+    ci_path = os.path.join(CI_BASEDIR, CI_FILENAME)
     ibkr_path = os.path.join(IBKR_BASEDIR, IBKR_FILENAME)
+    closed_accounts_path = os.path.join(CLOSED_ACCOUNTS_BASEDIR, CLOSED_ACCOUNTS_FILENAME)
 
     ci_direct = ci_direct_investing()
     ci_direct.parse(ci_path)
@@ -107,12 +48,20 @@ def main():
     print('\nInteractive Brokers Dividends:')
     print(df2)
 
+    other = closed_accounts()
+    other.parse(closed_accounts_path)
+    df3 = other.monthly_dividends()
+    print(df3)
+
 
     # Merge dataframes and sum up Amounts
     dfTotal = pd.merge(df1, df2, how='outer', left_index=True, right_index=True)
+    dfTotal = pd.merge(dfTotal, df3, how='outer', left_index=True, right_index=True)
     dfTotal['Amount'] = dfTotal.sum(axis=1)
     print('\nCombined Dividends (last 12 months):')
     print(dfTotal.Amount.tail(12))
+
+    plot_dividends(dfTotal.groupby(pd.Grouper(freq='Y')).agg({'Amount': 'sum'}))
 
 
     # print('{:%Y-%m-%d},{},TSE:{},{},{},${:.2f},{:d},{}.TO'.format(
