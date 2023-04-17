@@ -1,3 +1,8 @@
+# ToDo:
+# * use config file (yml)
+# * modularize the main logic
+# * run a single df and each account is an extra column (join operation)
+
 import io
 import matplotlib.pyplot as plt
 import os
