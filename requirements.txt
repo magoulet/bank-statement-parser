@@ -2,3 +2,4 @@ datetime
 matplotlib
 numpy
 pandas
+pyyaml
