@@ -1,5 +1,30 @@
 import io
+import os
 import pandas as pd
+import yaml
+
+class AppConfig():
+    def __init__(self):
+        cfg = yaml.load(open('config.yml'), Loader=yaml.FullLoader)
+        self.config = cfg
+
+    def get_ci_path(self):
+        basedir = self.config['ci']['basedir']
+        filename = self.config['ci']['filename']
+        path = os.path.join(basedir, filename)
+        return path
+
+    def get_ibkr_path(self):
+        basedir = self.config['ibkr']['basedir']
+        filename = self.config['ibkr']['filename']
+        path = os.path.join(basedir, filename)
+        return path
+
+    def get_closed_path(self):
+        basedir = self.config['closed']['basedir']
+        filename = self.config['closed']['filename']
+        path = os.path.join(basedir, filename)
+        return path
 
 class ci_direct_investing():
     def __init__(self):
