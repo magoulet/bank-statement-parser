@@ -52,7 +52,7 @@ class ci_direct_investing():
     def monthly_dividends(self):
         self.dividends()
         df = self.dividends
-        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='M')).agg({'Amount': 'sum'})
+        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='ME')).agg({'Amount': 'sum'})
         # print(f"Dividend summary: \n{self.monthly_dividends}")
         return self.monthly_dividends
 
@@ -101,7 +101,7 @@ class interactive_brokers():
     def monthly_dividends(self):
         self.dividends()
         df = self.dividends
-        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='M')).agg({'Amount': 'sum'})
+        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='ME')).agg({'Amount': 'sum'})
 
         return self.monthly_dividends
 
@@ -126,5 +126,5 @@ class closed_accounts():
     def monthly_dividends(self):
         self.dividends()
         df = self.dividends
-        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='M')).agg({'Amount': 'sum'})
+        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='ME')).agg({'Amount': 'sum'})
         return self.monthly_dividends

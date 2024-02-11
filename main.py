@@ -65,7 +65,7 @@ def main():
     print('\nCombined Dividends (last 12 months):')
     print(total.TotalAmount.tail(12))
 
-    plot_dividends(total.groupby(pd.Grouper(freq='Y')).agg(sum))
+    plot_dividends(total.groupby(pd.Grouper(freq='YE')).sum())
     # plot_dividends(total.groupby(pd.Grouper(freq='Y')).agg({'TotalAmount': 'sum'}))
 
 
