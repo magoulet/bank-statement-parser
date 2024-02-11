@@ -62,6 +62,10 @@ def main():
 
     # Merge dataframes and sum up Amounts
     total['TotalAmount'] = total.sum(axis=1)
+
+    # Sort chronologically
+    total.sort_index(inplace=True)
+    
     print('\nCombined Dividends (last 12 months):')
     print(total.TotalAmount.tail(12))
 
