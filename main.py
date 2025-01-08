@@ -1,8 +1,7 @@
-# ToDo:
-
 import matplotlib.pyplot as plt
 
 from classes import *
+
 
 def plot_dividends(df):
     plt.style.use('ggplot')
@@ -30,11 +29,11 @@ def main():
     df = ci_direct.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_CIDirect'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    print('\nCI Direct Dividends:')
-    print(df)
+    # print('\nCI Direct Dividends:')
+    # print(df)
 
-    print('\nCI Direct Orders (last 10:')
-    print(ci_direct.orders().tail(10))
+    # print('\nCI Direct Orders (last 10:')
+    # print(ci_direct.orders().tail(10))
 
     ###########
     # IBKR
@@ -45,8 +44,8 @@ def main():
     df = ibkr.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_IBKR'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    print('\nInteractive Brokers Dividends:')
-    print(df)
+    # print('\nInteractive Brokers Dividends:')
+    # print(df)
 
     ###########
     # Closed Accounts
@@ -56,8 +55,8 @@ def main():
     df = closed.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_Closed'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    print('\nClosed Accounts Dividends:')
-    print(df)
+    # print('\nClosed Accounts Dividends:')
+    # print(df)
 
 
     # Merge dataframes and sum up Amounts
@@ -69,7 +68,14 @@ def main():
     print('\nCombined Dividends (last 12 months):')
     print(total.TotalAmount.tail(12))
 
+    print('\nYearly Dividends by Broker:')
+    yearly_dividends = total.groupby(pd.Grouper(freq='YE')).sum()
+    yearly_summary = yearly_dividends[['Amount_CIDirect', 'Amount_IBKR']]
+    yearly_summary.columns = ['CI Direct', 'IBKR']
+    print(yearly_summary['2021':].round(2))  # Only show from 2021 onwards
+
     plot_dividends(total.groupby(pd.Grouper(freq='YE')).sum())
+    
     # plot_dividends(total.groupby(pd.Grouper(freq='Y')).agg({'TotalAmount': 'sum'}))
 
 
