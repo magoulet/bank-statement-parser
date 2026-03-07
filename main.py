@@ -1,6 +1,16 @@
+import os
 import matplotlib.pyplot as plt
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from classes import *
+
+CI_BASEDIR = os.environ.get("CI_BASEDIR", "")
+CI_FILENAME = os.environ.get("CI_FILENAME", "")
+CLOSED_BASEDIR = os.environ.get("CLOSED_BASEDIR", "")
+CLOSED_FILENAME = os.environ.get("CLOSED_FILENAME", "")
 
 
 def plot_dividends(df):
@@ -18,13 +28,11 @@ def plot_dividends(df):
 def main():
     total = pd.DataFrame()
 
-    config = AppConfig()
-
     ###########
     # CI Direct
     ###########
     ci_direct = ci_direct_investing()
-    ci_direct.parse(config.get_ci_path())
+    ci_direct.parse(os.path.join(CI_BASEDIR, CI_FILENAME))
 
     df = ci_direct.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_CIDirect'}, inplace=True)
@@ -39,19 +47,17 @@ def main():
     # IBKR
     ###########
     ibkr = interactive_brokers()
-    ibkr.parse(config.get_ibkr_path())
+    db.init_db()
 
-    df = ibkr.monthly_dividends()
+    df = ibkr.monthly_dividends_from_db()
     df.rename(columns={'Amount': 'Amount_IBKR'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    # print('\nInteractive Brokers Dividends:')
-    # print(df)
 
     ###########
     # Closed Accounts
     ###########
     closed = closed_accounts()
-    closed.parse(config.get_closed_path())
+    closed.parse(os.path.join(CLOSED_BASEDIR, CLOSED_FILENAME))
     df = closed.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_Closed'}, inplace=True)
     total = pd.concat([total, df], axis=1)

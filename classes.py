@@ -1,30 +1,8 @@
 import io
 import os
 import pandas as pd
-import yaml
+import db
 
-class AppConfig():
-    def __init__(self):
-        cfg = yaml.load(open('config.yml'), Loader=yaml.FullLoader)
-        self.config = cfg
-
-    def get_ci_path(self):
-        basedir = self.config['ci']['basedir']
-        filename = self.config['ci']['filename']
-        path = os.path.join(basedir, filename)
-        return path
-
-    def get_ibkr_path(self):
-        basedir = self.config['ibkr']['basedir']
-        filename = self.config['ibkr']['filename']
-        path = os.path.join(basedir, filename)
-        return path
-
-    def get_closed_path(self):
-        basedir = self.config['closed']['basedir']
-        filename = self.config['closed']['filename']
-        path = os.path.join(basedir, filename)
-        return path
 
 class ci_direct_investing():
     def __init__(self):
@@ -103,6 +81,18 @@ class interactive_brokers():
         df = self.dividends
         self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='ME')).agg({'Amount': 'sum'})
 
+        return self.monthly_dividends
+
+    def dividends_from_db(self):
+        rows = db.get_all_dividends()
+        data = [(r['date'], r['symbol'], r['amount']) for r in rows]
+        df = pd.DataFrame(data, columns=['Date', 'Symbol', 'Amount'])
+        df['Date'] = pd.to_datetime(df['Date'])
+        return df
+
+    def monthly_dividends_from_db(self):
+        df = self.dividends_from_db()
+        self.monthly_dividends = df.groupby(pd.Grouper(key='Date', freq='ME')).agg({'Amount': 'sum'})
         return self.monthly_dividends
 
 class closed_accounts():
