@@ -41,11 +41,6 @@ def main():
     df = ci_direct.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_CIDirect'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    # print('\nCI Direct Dividends:')
-    # print(df)
-
-    # print('\nCI Direct Orders (last 10:')
-    # print(ci_direct.orders().tail(10))
 
     ###########
     # IBKR
@@ -65,8 +60,6 @@ def main():
     df = closed.monthly_dividends()
     df.rename(columns={'Amount': 'Amount_Closed'}, inplace=True)
     total = pd.concat([total, df], axis=1)
-    # print('\nClosed Accounts Dividends:')
-    # print(df)
 
 
     # Merge dataframes and sum up Amounts
@@ -84,22 +77,7 @@ def main():
     yearly_summary.columns = ['CI Direct', 'IBKR']
     print(yearly_summary['2021':].round(2))  # Only show from 2021 onwards
 
-    # Monthly total dividends in a LibreOffice Calc-friendly format
-    # This prints two columns: Date (start of month) and Dividend Income (monthly total)
-    monthly_total = total['TotalAmount'].groupby(pd.Grouper(freq='ME')).sum()
-    monthly_total_df = monthly_total.to_frame(name='Dividend Income')
-
-    # Use the first day of each month to match the spreadsheet style (e.g. 1/1/2012)
-    monthly_total_df.index = monthly_total_df.index.to_period('M').to_timestamp('D', how='start')
-    monthly_total_df.insert(0, 'Date', monthly_total_df.index.strftime('%-m/%-d/%Y'))
-
-    print('\nMonthly Dividends for Calc (copy-paste the CSV below):')
-    # Format numbers to 2 decimal places to avoid long floating-point representations
-    print(monthly_total_df.to_csv(index=False, float_format='%.2f'))
-
     plot_dividends(total.groupby(pd.Grouper(freq='YE')).sum())
-    
-    # plot_dividends(total.groupby(pd.Grouper(freq='Y')).agg({'TotalAmount': 'sum'}))
 
 
 if __name__ == '__main__':
