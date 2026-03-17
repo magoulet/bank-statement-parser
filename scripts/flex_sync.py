@@ -15,6 +15,7 @@ import db
 
 FLEX_TOKEN = os.environ.get("IBKR_FLEX_TOKEN")
 FLEX_QUERY_ID = os.environ.get("IBKR_FLEX_QUERY_ID")
+INTRADAY_QUERY_ID = os.environ.get("IBKR_INTRADAY_FLEX_QUERY_ID")
 
 BASE_URL = "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService"
 
@@ -49,14 +50,32 @@ def parse_flex_xml(xml_content: str):
     dividends = []
     
     for stmt in root.findall(".//FlexStatement"):
-        for trade in stmt.findall(".//Trade"):
+        # Handle both Trade (original query) and TradeConfirm (intraday query)
+        for trade in stmt.findall(".//Trade") + stmt.findall(".//TradeConfirm"):
+            quantity = trade.get("quantity")
+            # Track if it was negative (original flex uses "--" for sells)
+            is_negative = quantity.startswith("-")
+            
+            # Strip leading dashes
+            while quantity.startswith("-"):
+                quantity = quantity[1:]
+            
+            # Check buySell attribute (TradeConfirm uses this)
+            buy_sell = trade.get("buySell")
+            if buy_sell and buy_sell.upper() == "SELL":
+                is_negative = True
+            
+            # Apply negative if needed
+            if is_negative:
+                quantity = f"-{quantity}"
+            
             trades.append({
                 "trade_date": trade.get("tradeDate"),
                 "symbol": trade.get("symbol"),
                 "description": trade.get("description"),
-                "quantity": trade.get("quantity"),
-                "trade_price": float(trade.get("tradePrice")),
-                "proceeds": float(trade.get("proceeds"))
+                "quantity": quantity,
+                "trade_price": float(trade.get("tradePrice") or trade.get("price")),
+                "proceeds": float(trade.get("proceeds") or trade.get("amount"))
             })
         
         for cash_tx in stmt.findall(".//CashTransaction"):
@@ -77,19 +96,36 @@ def sync_from_flex():
         print("Please set IBKR_FLEX_TOKEN and IBKR_FLEX_QUERY_ID in .env")
         sys.exit(1)
     
-    print("Fetching flex report...")
+    # Fetch original flex query (dividends + trades, trailing 365 days)
+    print("Fetching original flex query...")
     ref_code = send_request(FLEX_TOKEN, FLEX_QUERY_ID)
     time.sleep(2)
     xml = get_statement(FLEX_TOKEN, ref_code)
     
-    trades, dividends = parse_flex_xml(xml)
+    # Debug: print sample of XML to see format
+    print(f"  Original query sample: {xml[:1500]}")
     
-    print(f"Found {len(trades)} trades and {len(dividends)} dividends")
+    trades, dividends = parse_flex_xml(xml)
+    print(f"  Found {len(trades)} trades and {len(dividends)} dividends")
     
     trades_inserted = db.insert_trades_batch(trades, source="flex")
     dividends_inserted = db.insert_dividends_batch(dividends, source="flex")
+    print(f"  Inserted {trades_inserted} trades, {dividends_inserted} dividends")
     
-    print(f"Inserted {trades_inserted} new trades, {dividends_inserted} new dividends")
+    # Fetch intraday flex query (today's trades)
+    if INTRADAY_QUERY_ID:
+        print("Fetching intraday flex query...")
+        ref_code = send_request(FLEX_TOKEN, INTRADAY_QUERY_ID)
+        time.sleep(2)
+        xml = get_statement(FLEX_TOKEN, ref_code)
+        
+        intraday_trades, _ = parse_flex_xml(xml)  # Ignore dividends from intraday
+        print(f"  Found {len(intraday_trades)} intraday trades")
+        
+        intraday_inserted = db.insert_trades_batch(intraday_trades, source="intraday")
+        print(f"  Inserted {intraday_inserted} intraday trades")
+    else:
+        print("IBKR_INTRADAY_FLEX_QUERY_ID not set, skipping intraday")
     
     return trades, dividends
 

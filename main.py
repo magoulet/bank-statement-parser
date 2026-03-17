@@ -1,11 +1,15 @@
 import os
-import matplotlib.pyplot as plt
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from classes import *
+import scripts.db as db
 
 CI_BASEDIR = os.environ.get("CI_BASEDIR", "")
 CI_FILENAME = os.environ.get("CI_FILENAME", "")

@@ -134,3 +134,15 @@ def get_all_trades():
     ).fetchall()
     conn.close()
     return df
+
+
+def get_trades_by_source(sources: list):
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    placeholders = ','.join(['?'] * len(sources))
+    df = conn.execute(
+        f"SELECT trade_date, symbol, description, quantity, trade_price, proceeds, source FROM trades WHERE source IN ({placeholders}) ORDER BY trade_date",
+        sources
+    ).fetchall()
+    conn.close()
+    return df
