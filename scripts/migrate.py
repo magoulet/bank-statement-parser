@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-import db
+import scripts.db as db
 
 
 def parse_csv_dividends(csv_path: str):

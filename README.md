@@ -1,6 +1,6 @@
 # Bank Statement Parser
 
-Python script to analyze dividends from investment accounts: Interactive Brokers (IBKR), CI Direct Investing, and closed accounts.
+Terminal menu app to sync IBKR flex data, sync transactions to MariaDB, and generate dividend reports.
 
 ## Dependencies
 
@@ -26,9 +26,15 @@ IBKR_FILENAME='statement.csv'
 CLOSED_BASEDIR='/path/to/closed/directory'
 CLOSED_FILENAME='statement.csv'
 
-# IBKR Flex Web Service (for automatic sync)
+# IBKR Flex Web Service
 IBKR_FLEX_TOKEN=your_token
 IBKR_FLEX_QUERY_ID=your_query_id
+IBKR_INTRADAY_FLEX_QUERY_ID=your_intraday_query_id
+
+# MySQL (portfolio DB on tars)
+MYSQL_HOST=tars
+MYSQL_USER=admin
+MYSQL_PASSWORD=your_password
 ```
 
 To get IBKR Flex credentials:
@@ -40,20 +46,24 @@ To get IBKR Flex credentials:
 ## Usage
 
 ```bash
-# One-time: migrate existing IBKR CSV
-python scripts/migrate.py
-
-# Periodic: sync latest from IBKR (last 365 days)
-python scripts/flex_sync.py sync
-
-# Generate dividend report
-python main.py
+# Launch the terminal menu
+python app.py
 ```
 
-## Workflow
+Inside the menu:
 
-1. **CI Direct** - Manual CSV export (full history)
-2. **IBKR** - One-time CSV migration + ongoing Flex sync
-3. **Closed Accounts** - Manual CSV export
+1. Sync IBKR Flex -> SQLite (`scripts/ibkr_data.db`)
+2. Sync transactions -> MariaDB (`portfolio.transactions` and `portfolio.contributions`)
+3. Generate dividend report
 
-Data is stored in `ibkr_data.db` (SQLite, gitignored).
+You can still run scripts directly if needed:
+
+```bash
+# One-time only historical migration
+python scripts/migrate.py
+
+# Manual sync steps
+python scripts/flex_sync.py sync
+python sync_transactions.py
+python report_dividends.py
+```

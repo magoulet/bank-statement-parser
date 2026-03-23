@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import db
+import scripts.db as db
 
 FLEX_TOKEN = os.environ.get("IBKR_FLEX_TOKEN")
 FLEX_QUERY_ID = os.environ.get("IBKR_FLEX_QUERY_ID")
@@ -101,9 +101,6 @@ def sync_from_flex():
     ref_code = send_request(FLEX_TOKEN, FLEX_QUERY_ID)
     time.sleep(2)
     xml = get_statement(FLEX_TOKEN, ref_code)
-    
-    # Debug: print sample of XML to see format
-    print(f"  Original query sample: {xml[:1500]}")
     
     trades, dividends = parse_flex_xml(xml)
     print(f"  Found {len(trades)} trades and {len(dividends)} dividends")
