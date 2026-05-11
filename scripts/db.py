@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "ibkr_data.db"
+DB_PATH = Path(__file__).parent.parent / "data" / "ibkr_data.db"
 
 
 def get_connection():

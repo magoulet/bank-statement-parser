@@ -23,9 +23,9 @@ def run_step(title: str, command: list[str]) -> None:
 
 def print_menu() -> None:
     print("\nBank Statement Parser")
-    print("1) Sync IBKR Flex -> SQLite")
-    print("2) Sync transactions -> MariaDB (portfolio_return daily workflow)")
-    print("3) Generate dividend report")
+    print("1) Sync IBKR Flex -> local database (trades + dividends)")
+    print("2) Sync IBKR trades -> MariaDB (to be read by portfolio_return)")
+    print("3) Generate dividend report (IBKR (sqlite) + CI Direct (CSV) + Closed, combined)")
     print("4) Exit")
 
 
@@ -36,23 +36,23 @@ def main() -> None:
 
         if choice == "1":
             run_step(
-                "Sync IBKR Flex data to local SQLite",
+                "Sync IBKR Flex data to local database (trades + dividends)",
                 [sys.executable, "scripts/flex_sync.py", "sync"],
             )
         elif choice == "2":
             confirm = input(
-                "This uploads transactions to MariaDB (portfolio) for the portfolio_return daily workflow. Continue? [y/N]: "
+                "This uploads IBKR trades (buys/sells from flex + intraday queries) to MariaDB (portfolio) for the portfolio_return daily workflow. Continue? [y/N]: "
             ).strip().lower()
             if confirm == "y":
                 run_step(
-                    "Sync local trades to MariaDB",
+                    "Sync IBKR trades to MariaDB",
                     [sys.executable, "sync_transactions.py"],
                 )
             else:
                 print("Cancelled.")
         elif choice == "3":
             run_step(
-                "Generate dividend report",
+                "Generate dividend report (IBKR + CI Direct + Closed)",
                 [sys.executable, "report_dividends.py"],
             )
         elif choice == "4":

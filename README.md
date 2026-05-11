@@ -52,7 +52,7 @@ python app.py
 
 Inside the menu:
 
-1. Sync IBKR Flex -> SQLite (`scripts/ibkr_data.db`)
+1. Sync IBKR Flex -> local database (`data/ibkr_data.db`)
 2. Sync transactions -> MariaDB (`portfolio.transactions` and `portfolio.contributions`)
 3. Generate dividend report
 
